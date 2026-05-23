@@ -18,3 +18,8 @@ __pycache__/
 
 # Claude config (local only)
 .claude/
+
+# Docker volumes / local data
+docker/data/
+
+# Drizzle journal is committed; generated SQL snapshots are too small to ignore

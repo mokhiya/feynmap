@@ -12,27 +12,36 @@
 ## Структура
 ```
 backend/   — Express API (/chat, /assess), ключ Anthropic только здесь
+  src/db/  — Drizzle schema + миграции (Phase 1+)
 frontend/  — React-приложение, чат + радар + финальный отчёт
 docs/      — architecture.drawio
+docker/    — initdb (CREATE EXTENSION vector, pgcrypto)
 ```
 
 ## Запуск
 
-### 1. Ключ Anthropic
-Создайте файл `backend/.env` со своим ключом (файл уже в `.gitignore`):
-```
-ANTHROPIC_API_KEY=sk-ant-...
-PORT=8787
+### 1. Конфиг
+```bash
+cp backend/.env.example backend/.env
+# заполнить ANTHROPIC_API_KEY и JWT_SECRET (openssl rand -hex 32)
 ```
 
-### 2. Backend
+### 2. База (Postgres 16 + pgvector)
+```bash
+docker compose up -d
+docker compose logs -f db   # дождаться "database system is ready"
+```
+
+### 3. Backend
 ```bash
 cd backend
 npm install
-npm run dev          # слушает на http://localhost:8787
+npm run db:migrate   # применить миграции Drizzle
+npm run db:seed      # роли + permissions + dev-admin (опционально на этом шаге)
+npm run dev          # http://localhost:8787
 ```
 
-### 3. Frontend
+### 4. Frontend
 В другом терминале:
 ```bash
 cd frontend
