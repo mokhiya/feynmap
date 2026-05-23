@@ -37,3 +37,31 @@ export async function audit({
     console.error('[audit] insert failed:', e?.message || e, { action });
   }
 }
+
+// Phase 2+ routes pass ipAddress / userAgent directly (no req object).
+// Keeps the signature flat for callsites in documents/topics/sessions/...
+export async function writeAudit({
+  orgId,
+  actorUserId = null,
+  action,
+  targetType = null,
+  targetId = null,
+  meta = {},
+  ipAddress = null,
+  userAgent = null,
+}) {
+  try {
+    await db.insert(auditLogs).values({
+      orgId,
+      actorUserId,
+      action,
+      targetType,
+      targetId,
+      meta,
+      ipAddress,
+      userAgent: userAgent ? String(userAgent).slice(0, 500) : null,
+    });
+  } catch (e) {
+    console.error('[audit] insert failed:', e?.message || e, { action });
+  }
+}

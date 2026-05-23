@@ -13,11 +13,19 @@ dotenv.config({
 
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import { getLLM } from './src/providers/index.js';
 import { authRouter } from './src/routes/auth.js';
 import { usersRouter } from './src/routes/users.js';
 import { rolesRouter } from './src/routes/roles.js';
 import { mentorBindingsRouter } from './src/routes/mentorBindings.js';
+import { documentsRouter } from './src/routes/documents.js';
+import { topicsRouter } from './src/routes/topics.js';
+import { sessionsRouter } from './src/routes/sessions.js';
+import { assignmentsRouter } from './src/routes/assignments.js';
+import { analyticsRouter } from './src/routes/analytics.js';
+import { reviewsRouter } from './src/routes/reviews.js';
+import { roleTargetsRouter } from './src/routes/roleTargets.js';
 
 const PORT = process.env.PORT || 8787;
 
@@ -31,14 +39,44 @@ const PORT = process.env.PORT || 8787;
 // means unit tests can import this file without an API key.
 
 const app = express();
-app.use(cors());
-app.use(express.json({ limit: '1mb' }));
-app.set('trust proxy', true); // so req.ip honors X-Forwarded-For when behind a proxy
+
+// CORS allowlist (M1.3). Empty CORS_ORIGINS in dev → permissive so the
+// Vite proxy + curl smoke-tests work.
+const corsOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+app.use(
+  cors(
+    corsOrigins.length
+      ? {
+          origin: (origin, cb) =>
+            !origin || corsOrigins.includes(origin)
+              ? cb(null, true)
+              : cb(new Error(`CORS: origin not allowed: ${origin}`)),
+          credentials: true,
+        }
+      : {},
+  ),
+);
+// helmet adds a sensible default set of security headers. We disable
+// CSP because in dev Vite proxies us and the frontend supplies its own.
+app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+
+app.use(express.json({ limit: '4mb' })); // larger ceiling — RAG-grounded /assess can be chunky
+app.set('trust proxy', true);
 
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
 app.use('/roles', rolesRouter);
 app.use('/mentor-bindings', mentorBindingsRouter);
+app.use('/documents', documentsRouter);
+app.use('/topics', topicsRouter);
+app.use('/sessions', sessionsRouter);
+app.use('/assignments', assignmentsRouter);
+app.use('/analytics', analyticsRouter);
+app.use('/reviews', reviewsRouter);
+app.use('/role-targets', roleTargetsRouter);
 
 // ---------- system prompts ----------
 

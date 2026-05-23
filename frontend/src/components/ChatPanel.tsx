@@ -2,11 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import type { Message } from '../types';
 import { useT } from '../i18n';
 
+export interface TurnSignals {
+  pasteSize?: number;
+  typingMs?: number;
+  deletes?: number;
+}
+
 interface Props {
   topic: string;
   messages: Message[];
   busy: boolean;
-  onSend: (text: string) => void;
+  onSend: (text: string, signals?: TurnSignals) => void;
   onFinish: () => void;
 }
 
@@ -15,15 +21,33 @@ export default function ChatPanel({ topic, messages, busy, onSend, onFinish }: P
   const [draft, setDraft] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Anti-fraud signal capture, reset on each send.
+  const focusTsRef = useRef<number | null>(null);
+  const pasteSizeRef = useRef<number>(0);
+  const deletesRef = useRef<number>(0);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, busy]);
 
+  const resetSignals = () => {
+    focusTsRef.current = null;
+    pasteSizeRef.current = 0;
+    deletesRef.current = 0;
+  };
+
   const send = () => {
     const txt = draft.trim();
     if (!txt || busy) return;
-    onSend(txt);
+    const startedAt = focusTsRef.current;
+    const signals: TurnSignals = {
+      pasteSize: pasteSizeRef.current || undefined,
+      typingMs: startedAt ? Date.now() - startedAt : undefined,
+      deletes: deletesRef.current || undefined,
+    };
+    onSend(txt, signals);
     setDraft('');
+    resetSignals();
   };
 
   return (
@@ -62,7 +86,17 @@ export default function ChatPanel({ topic, messages, busy, onSend, onFinish }: P
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
+          onFocus={() => {
+            if (focusTsRef.current == null) focusTsRef.current = Date.now();
+          }}
+          onPaste={(e) => {
+            const text = e.clipboardData?.getData('text') || '';
+            if (text.length > 0) pasteSizeRef.current += text.length;
+          }}
           onKeyDown={(e) => {
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+              deletesRef.current += 1;
+            }
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) send();
           }}
           rows={2}

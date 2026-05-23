@@ -163,6 +163,214 @@ usersRouter.post('/', requirePermission('user.manage', 'org'), async (req, res) 
   }
 });
 
+// ---------- POST /users/import (CSV bulk import) ----------
+//
+// Accepts either:
+//   - JSON  { csv: "email,fullName,password,roleCode,locale\n..." }
+//   - JSON  { rows: [{ email, fullName, password, roleCode, locale }] }
+//
+// Header row is required when sending CSV. Recognised columns (any order):
+//   email | fullName | password | roleCode | locale
+//
+// Behaviour:
+//   - Per-row try/catch. Returns a summary { created, skipped, failed, errors[] }.
+//   - Duplicate emails are skipped (not failures).
+//   - Role grants need role.assign; without it, roleCode column is ignored.
+//   - All successful creations + the import event itself are audited.
+
+function parseCsv(text) {
+  // RFC 4180-light: comma delimiter, "double-quoted" with "" as literal quote.
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let i = 0;
+  let inQuotes = false;
+  const s = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  while (i < s.length) {
+    const ch = s[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (s[i + 1] === '"') {
+          cell += '"';
+          i += 2;
+          continue;
+        }
+        inQuotes = false;
+        i++;
+        continue;
+      }
+      cell += ch;
+      i++;
+      continue;
+    }
+    if (ch === '"') {
+      inQuotes = true;
+      i++;
+      continue;
+    }
+    if (ch === ',') {
+      row.push(cell);
+      cell = '';
+      i++;
+      continue;
+    }
+    if (ch === '\n') {
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = '';
+      i++;
+      continue;
+    }
+    cell += ch;
+    i++;
+  }
+  // tail
+  if (cell.length > 0 || row.length > 0) {
+    row.push(cell);
+    rows.push(row);
+  }
+  // strip fully-empty rows
+  return rows.filter((r) => r.some((c) => String(c).trim().length > 0));
+}
+
+function rowsFromCsv(text) {
+  const grid = parseCsv(text);
+  if (grid.length === 0) return [];
+  const header = grid[0].map((h) => String(h).trim().toLowerCase());
+  const idx = (name) => header.indexOf(name);
+  const out = [];
+  for (let r = 1; r < grid.length; r++) {
+    const row = grid[r];
+    out.push({
+      email: idx('email') >= 0 ? row[idx('email')] : '',
+      fullName: idx('fullname') >= 0 ? row[idx('fullname')] : '',
+      password: idx('password') >= 0 ? row[idx('password')] : '',
+      roleCode: idx('rolecode') >= 0 ? row[idx('rolecode')] : '',
+      locale: idx('locale') >= 0 ? row[idx('locale')] : '',
+    });
+  }
+  return out;
+}
+
+usersRouter.post(
+  '/import',
+  requirePermission('user.manage', 'org'),
+  async (req, res) => {
+    try {
+      const body = req.body || {};
+      const sourceRows = Array.isArray(body.rows)
+        ? body.rows
+        : typeof body.csv === 'string'
+          ? rowsFromCsv(body.csv)
+          : [];
+      if (!sourceRows.length)
+        return res.status(400).json({ error: 'csv or rows required' });
+
+      const canRoles = canAssignRoles(req);
+
+      // Preload roles once for role.assign mapping.
+      const orgRoles = await db
+        .select()
+        .from(roles)
+        .where(eq(roles.orgId, req.user.orgId));
+      const codeToRole = new Map(orgRoles.map((r) => [r.code, r]));
+
+      const summary = { created: 0, skipped: 0, failed: 0, errors: [] };
+      const createdIds = [];
+
+      for (let n = 0; n < sourceRows.length; n++) {
+        const raw = sourceRows[n] || {};
+        const email = String(raw.email || '').toLowerCase().trim();
+        const fullName = String(raw.fullName || '').trim();
+        const password = String(raw.password || '').trim();
+        const localeRaw = String(raw.locale || 'ru').trim();
+        const locale = ['ru', 'en', 'uz'].includes(localeRaw) ? localeRaw : 'ru';
+        const roleCode = String(raw.roleCode || '').trim();
+
+        if (!email || !fullName || !password) {
+          summary.failed += 1;
+          summary.errors.push({
+            row: n + 1,
+            email,
+            reason: 'missing email/fullName/password',
+          });
+          continue;
+        }
+
+        try {
+          const [dup] = await db
+            .select({ id: users.id })
+            .from(users)
+            .where(and(eq(users.orgId, req.user.orgId), eq(users.email, email)))
+            .limit(1);
+          if (dup) {
+            summary.skipped += 1;
+            continue;
+          }
+
+          const passwordHash = await hashPassword(password);
+          const [created] = await db
+            .insert(users)
+            .values({
+              orgId: req.user.orgId,
+              email,
+              passwordHash,
+              fullName: fullName.slice(0, 200),
+              locale,
+              status: 'active',
+            })
+            .returning();
+          createdIds.push(created.id);
+
+          if (roleCode && canRoles) {
+            const r = codeToRole.get(roleCode);
+            if (r) {
+              await db
+                .insert(userRoles)
+                .values({
+                  userId: created.id,
+                  roleId: r.id,
+                  assignedBy: req.user.id,
+                })
+                .onConflictDoNothing();
+            }
+          }
+
+          summary.created += 1;
+        } catch (e) {
+          summary.failed += 1;
+          summary.errors.push({
+            row: n + 1,
+            email,
+            reason: String(e?.message || e).slice(0, 200),
+          });
+        }
+      }
+
+      await audit({
+        req,
+        orgId: req.user.orgId,
+        actorUserId: req.user.id,
+        action: 'user.import',
+        targetType: 'user',
+        targetId: null,
+        meta: {
+          ...summary,
+          totalRows: sourceRows.length,
+          createdIds,
+          roleAssignAllowed: canRoles,
+        },
+      });
+
+      res.json(summary);
+    } catch (e) {
+      console.error('[POST /users/import]', e);
+      res.status(500).json({ error: 'import failed' });
+    }
+  },
+);
+
 // ---------- GET /users/:id ----------
 
 usersRouter.get('/:id', requirePermission('user.manage', 'org'), async (req, res) => {

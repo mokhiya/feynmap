@@ -22,12 +22,38 @@ import {
   text,
   timestamp,
   boolean,
+  integer,
+  doublePrecision,
+  bigint,
   jsonb,
   pgEnum,
   uniqueIndex,
   index,
   primaryKey,
+  customType,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+
+// pgvector custom type. bge-m3 produces 1024-dim float vectors.
+// We pass dimensions per-column so future swaps to a smaller/larger
+// model are one-line changes.
+export const vector = customType({
+  dataType(config) {
+    const dim = config?.dimensions ?? 1024;
+    return `vector(${dim})`;
+  },
+  toDriver(value) {
+    if (value == null) return null;
+    return `[${value.join(',')}]`;
+  },
+  fromDriver(value) {
+    if (value == null) return null;
+    if (Array.isArray(value)) return value;
+    // pg returns "[0.1,0.2,...]" as text
+    const s = String(value).replace(/^\[|\]$/g, '');
+    return s ? s.split(',').map(Number) : [];
+  },
+});
 
 // ---------- enums ----------
 
@@ -65,9 +91,65 @@ export const auditAction = pgEnum('audit_action', [
   'kb.delete',
   'kb.reindex',
   'assignment.create',
+  'assignment.complete',
   'assessment.override',
+  'assessment.appeal',
+  'assessment.appeal_resolve',
+  'topic.create',
+  'topic.update',
+  'topic.delete',
+  'lesson.create',
+  'lesson.update',
+  'lesson.delete',
+  'session.start',
+  'session.finalize',
+  'session.flag_suspicious',
   'session.convert_to_assessment', // practice -> assessment (M2.5.1)
 ]);
+
+export const documentStatus = pgEnum('document_status', [
+  'uploaded',
+  'parsing',
+  'indexed',
+  'failed',
+]);
+
+export const topicStatus = pgEnum('topic_status', ['draft', 'published', 'archived']);
+
+export const lessonStatus = pgEnum('lesson_status', ['draft', 'published', 'archived']);
+
+export const sessionMode = pgEnum('session_mode', ['practice', 'assessment']);
+
+export const sessionStatus = pgEnum('session_status', [
+  'in_progress',
+  'auto_scored',
+  'pending_review',
+  'finalized',
+  'abandoned',
+]);
+
+export const assessmentStatus = pgEnum('assessment_status', [
+  'auto',
+  'pending_review',
+  'approved',
+  'overridden',
+]);
+
+export const appealStatus = pgEnum('appeal_status', [
+  'open',
+  'accepted',
+  'rejected',
+]);
+
+export const assignmentStatus = pgEnum('assignment_status', [
+  'assigned',
+  'in_progress',
+  'completed',
+  'overdue',
+  'cancelled',
+]);
+
+export const assignmentTargetType = pgEnum('assignment_target_type', ['topic', 'lesson']);
 
 // ---------- core: organization ----------
 
@@ -232,3 +314,302 @@ export const auditLogs = pgTable(
     actionIdx: index('audit_logs_action_idx').on(t.action),
   }),
 );
+
+// ============================================================
+// Phase 2 — Knowledge Base
+// ============================================================
+
+export const documents = pgTable(
+  'documents',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    orgId: uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    mime: text('mime').notNull(),
+    sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull().default(0),
+    storagePath: text('storage_path').notNull(),
+    plainText: text('plain_text'),                 // extracted full text (preview / debug)
+    status: documentStatus('status').notNull().default('uploaded'),
+    error: text('error'),
+    version: integer('version').notNull().default(1), // M5 KB versioning
+    chunkCount: integer('chunk_count').notNull().default(0),
+    uploadedBy: uuid('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    orgIdx: index('documents_org_idx').on(t.orgId),
+    statusIdx: index('documents_status_idx').on(t.status),
+  }),
+);
+
+export const documentChunks = pgTable(
+  'document_chunks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    documentId: uuid('document_id').notNull().references(() => documents.id, { onDelete: 'cascade' }),
+    orgId: uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+    chunkIndex: integer('chunk_index').notNull(),
+    text: text('text').notNull(),
+    tokens: integer('tokens').notNull().default(0),
+    page: integer('page'),
+    heading: text('heading'),
+    embedding: vector('embedding', { dimensions: 1024 }), // bge-m3
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    docChunkIdx: uniqueIndex('document_chunks_doc_idx_idx').on(t.documentId, t.chunkIndex),
+    orgIdx: index('document_chunks_org_idx').on(t.orgId),
+  }),
+);
+
+// ============================================================
+// Phase 3 — Topics, Competencies, Lessons
+// ============================================================
+
+export const topics = pgTable(
+  'topics',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    orgId: uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    description: text('description').notNull().default(''),
+    locale: text('locale').notNull().default('ru'),
+    status: topicStatus('status').notNull().default('draft'),
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    orgIdx: index('topics_org_idx').on(t.orgId),
+    orgStatusIdx: index('topics_org_status_idx').on(t.orgId, t.status),
+  }),
+);
+
+export const topicDocuments = pgTable(
+  'topic_documents',
+  {
+    topicId: uuid('topic_id').notNull().references(() => topics.id, { onDelete: 'cascade' }),
+    documentId: uuid('document_id').notNull().references(() => documents.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.topicId, t.documentId] }),
+    docIdx: index('topic_documents_doc_idx').on(t.documentId),
+  }),
+);
+
+export const competencies = pgTable(
+  'competencies',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    orgId: uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+    topicId: uuid('topic_id').references(() => topics.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    description: text('description').notNull().default(''),
+    weight: doublePrecision('weight').notNull().default(1),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    orgIdx: index('competencies_org_idx').on(t.orgId),
+    topicIdx: index('competencies_topic_idx').on(t.topicId),
+  }),
+);
+
+export const lessons = pgTable(
+  'lessons',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    orgId: uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    introContent: text('intro_content').notNull().default(''),
+    status: lessonStatus('status').notNull().default('draft'),
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    orgIdx: index('lessons_org_idx').on(t.orgId),
+  }),
+);
+
+export const lessonTopics = pgTable(
+  'lesson_topics',
+  {
+    lessonId: uuid('lesson_id').notNull().references(() => lessons.id, { onDelete: 'cascade' }),
+    topicId: uuid('topic_id').notNull().references(() => topics.id, { onDelete: 'cascade' }),
+    position: integer('position').notNull().default(0),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.lessonId, t.topicId] }),
+  }),
+);
+
+export const attachments = pgTable(
+  'attachments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    orgId: uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+    lessonId: uuid('lesson_id').references(() => lessons.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    mime: text('mime').notNull(),
+    sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull().default(0),
+    storagePath: text('storage_path').notNull(),
+    uploadedBy: uuid('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    lessonIdx: index('attachments_lesson_idx').on(t.lessonId),
+  }),
+);
+
+// ============================================================
+// Phase 4 — Assignments
+// ============================================================
+
+export const assignments = pgTable(
+  'assignments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    orgId: uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+    assignerId: uuid('assigner_id').notNull().references(() => users.id, { onDelete: 'set null' }),
+    assigneeId: uuid('assignee_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    targetType: assignmentTargetType('target_type').notNull(),
+    targetId: uuid('target_id').notNull(),
+    dueAt: timestamp('due_at', { withTimezone: true }),
+    status: assignmentStatus('status').notNull().default('assigned'),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    orgIdx: index('assignments_org_idx').on(t.orgId),
+    assigneeIdx: index('assignments_assignee_idx').on(t.assigneeId),
+    statusIdx: index('assignments_status_idx').on(t.status),
+  }),
+);
+
+// ============================================================
+// Phase 5 — Sessions + AssessmentResults
+// ============================================================
+
+export const sessions = pgTable(
+  'sessions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    orgId: uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    topicId: uuid('topic_id').references(() => topics.id, { onDelete: 'set null' }),
+    topicLabel: text('topic_label').notNull().default(''), // human-readable copy for analytics
+    mode: sessionMode('mode').notNull().default('practice'),
+    status: sessionStatus('status').notNull().default('in_progress'),
+    locale: text('locale').notNull().default('ru'),
+    transcript: jsonb('transcript').notNull().default([]), // [{role, content}, ...]
+    // Anti-fraud signals collected during session (M2.3)
+    flags: jsonb('flags').notNull().default({}),
+    // Wellbeing telemetry (M2.5.3-4)
+    wellbeing: jsonb('wellbeing').notNull().default({}),
+    docVersions: jsonb('doc_versions').notNull().default({}), // {docId: version} pinned at session start (M5)
+    assignmentId: uuid('assignment_id').references(() => assignments.id, { onDelete: 'set null' }),
+    startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
+    finalizedAt: timestamp('finalized_at', { withTimezone: true }),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    orgIdx: index('sessions_org_idx').on(t.orgId),
+    userIdx: index('sessions_user_idx').on(t.userId),
+    modeStatusIdx: index('sessions_mode_status_idx').on(t.mode, t.status),
+  }),
+);
+
+export const assessmentResults = pgTable(
+  'assessment_results',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    sessionId: uuid('session_id').notNull().references(() => sessions.id, { onDelete: 'cascade' }),
+    orgId: uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    competencies: jsonb('competencies').notNull().default([]), // [{name, score, evidence, criterion, gap, source_refs}]
+    strengths: jsonb('strengths').notNull().default([]),
+    gaps: jsonb('gaps').notNull().default([]),
+    recommendations: jsonb('recommendations').notNull().default([]),
+    nextFocus: text('next_focus'),
+    sourceRefs: jsonb('source_refs').notNull().default([]), // [{docId, chunkIndex, page}]
+    status: assessmentStatus('status').notNull().default('auto'),
+    overriddenBy: uuid('overridden_by').references(() => users.id, { onDelete: 'set null' }),
+    overrideComment: text('override_comment'),
+    overriddenAt: timestamp('overridden_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    sessionIdx: uniqueIndex('assessment_results_session_idx').on(t.sessionId),
+    userIdx: index('assessment_results_user_idx').on(t.userId),
+    statusIdx: index('assessment_results_status_idx').on(t.status),
+  }),
+);
+
+// Appeals — learner pushes back on an Assessor decision (M2.2)
+export const assessmentAppeals = pgTable(
+  'assessment_appeals',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    resultId: uuid('result_id').notNull().references(() => assessmentResults.id, { onDelete: 'cascade' }),
+    orgId: uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    reason: text('reason').notNull(),
+    status: appealStatus('status').notNull().default('open'),
+    resolvedBy: uuid('resolved_by').references(() => users.id, { onDelete: 'set null' }),
+    resolution: text('resolution'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  },
+  (t) => ({
+    resultIdx: index('appeals_result_idx').on(t.resultId),
+    statusIdx: index('appeals_status_idx').on(t.status),
+  }),
+);
+
+// ============================================================
+// M3.2 — Role-target leveling
+// ============================================================
+
+export const roleTargets = pgTable(
+  'role_targets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    orgId: uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+    roleLabel: text('role_label').notNull(), // free-form job role ("Backend dev", "PM"…)
+    competencyId: uuid('competency_id').references(() => competencies.id, { onDelete: 'cascade' }),
+    competencyName: text('competency_name').notNull(), // denorm copy for free-floating comps
+    targetScore: integer('target_score').notNull().default(70), // 0..100
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    orgRoleIdx: index('role_targets_org_role_idx').on(t.orgId, t.roleLabel),
+  }),
+);
+
+// ============================================================
+// M3.3 — Spaced repetition
+// ============================================================
+
+export const spacedReviews = pgTable(
+  'spaced_reviews',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    orgId: uuid('org_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    topicId: uuid('topic_id').references(() => topics.id, { onDelete: 'cascade' }),
+    competencyName: text('competency_name').notNull(),
+    lastScore: integer('last_score').notNull().default(0),
+    reviewAt: timestamp('review_at', { withTimezone: true }).notNull(),
+    intervalDays: integer('interval_days').notNull().default(1),
+    easeFactor: doublePrecision('ease_factor').notNull().default(2.5),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    userReviewIdx: index('spaced_reviews_user_review_idx').on(t.userId, t.reviewAt),
+  }),
+);
+
