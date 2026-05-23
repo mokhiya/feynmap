@@ -15,6 +15,9 @@ import express from 'express';
 import cors from 'cors';
 import { getLLM } from './src/providers/index.js';
 import { authRouter } from './src/routes/auth.js';
+import { usersRouter } from './src/routes/users.js';
+import { rolesRouter } from './src/routes/roles.js';
+import { mentorBindingsRouter } from './src/routes/mentorBindings.js';
 
 const PORT = process.env.PORT || 8787;
 
@@ -33,6 +36,9 @@ app.use(express.json({ limit: '1mb' }));
 app.set('trust proxy', true); // so req.ip honors X-Forwarded-For when behind a proxy
 
 app.use('/auth', authRouter);
+app.use('/users', usersRouter);
+app.use('/roles', rolesRouter);
+app.use('/mentor-bindings', mentorBindingsRouter);
 
 // ---------- system prompts ----------
 
