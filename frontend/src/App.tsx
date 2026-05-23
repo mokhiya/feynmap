@@ -3,9 +3,12 @@ import ChatPanel from './components/ChatPanel';
 import RadarPanel from './components/RadarPanel';
 import ReportScreen from './components/ReportScreen';
 import LangSwitcher from './components/LangSwitcher';
+import LoginScreen from './components/LoginScreen';
+import AdminPanel from './components/AdminPanel';
 import { postAssess, postChat } from './api';
 import type { Assessment, Message } from './types';
 import { useLang, useT } from './i18n';
+import { useAuth } from './auth';
 
 type View = 'setup' | 'session' | 'report';
 
@@ -21,6 +24,10 @@ interface Persisted {
 export default function App() {
   const t = useT();
   const { lang } = useLang();
+  const { user, loading: authLoading } = useAuth();
+  // Top-level app mode. 'learn' is the anonymous base MVP (Phase 0).
+  // 'login' / 'admin' are gated by JWT.
+  const [appMode, setAppMode] = useState<'learn' | 'login' | 'admin'>('learn');
   const [view, setView] = useState<View>('setup');
   const [topic, setTopic] = useState('');
   const [topicDraft, setTopicDraft] = useState('');
@@ -137,6 +144,31 @@ export default function App() {
     localStorage.removeItem(LS_KEY);
   };
 
+  // ----- top-level mode routing -----
+  // After a successful login the LoginScreen disappears and we land
+  // in admin mode automatically.
+  useEffect(() => {
+    if (appMode === 'login' && user) setAppMode('admin');
+  }, [appMode, user]);
+
+  if (appMode === 'login' && !user) {
+    return <LoginScreen onCancel={() => setAppMode('learn')} />;
+  }
+  if (appMode === 'admin') {
+    if (authLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center text-slate-500 text-sm">
+          Loading session…
+        </div>
+      );
+    }
+    if (!user) {
+      return <LoginScreen onCancel={() => setAppMode('learn')} />;
+    }
+    return <AdminPanel onExit={() => setAppMode('learn')} />;
+  }
+
+  // ----- learn view (anonymous base MVP) -----
   if (view === 'report') {
     return <ReportScreen topic={topic} assessment={assessment} onRestart={reset} />;
   }
@@ -147,7 +179,24 @@ export default function App() {
         <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
           <div className="flex items-center justify-between">
             <div className="text-xs uppercase tracking-wider text-accent font-semibold">FeynMap</div>
-            <LangSwitcher compact />
+            <div className="flex items-center gap-2">
+              {user ? (
+                <button
+                  onClick={() => setAppMode('admin')}
+                  className="text-xs text-accent hover:underline"
+                >
+                  Admin ({user.email}) →
+                </button>
+              ) : (
+                <button
+                  onClick={() => setAppMode('login')}
+                  className="text-xs text-slate-500 hover:text-accent"
+                >
+                  Sign in
+                </button>
+              )}
+              <LangSwitcher compact />
+            </div>
           </div>
           <h1 className="text-2xl font-bold mt-1">{t.appTitle}</h1>
           <p className="text-slate-600 text-sm mt-2 leading-relaxed">{t.appTagline}</p>
@@ -198,6 +247,21 @@ export default function App() {
         </div>
         <div className="flex items-center gap-3">
           {error && <div className="text-xs text-rose-600 max-w-md truncate" title={error}>{error}</div>}
+          {user ? (
+            <button
+              onClick={() => setAppMode('admin')}
+              className="text-xs text-accent hover:underline"
+            >
+              Admin →
+            </button>
+          ) : (
+            <button
+              onClick={() => setAppMode('login')}
+              className="text-xs text-slate-500 hover:text-accent"
+            >
+              Sign in
+            </button>
+          )}
           <LangSwitcher compact />
         </div>
       </header>
