@@ -1,0 +1,36 @@
+# FeynMap — local dev infra
+#
+# Postgres 16 with pgvector for KB chunks + embeddings. Single container,
+# volume-mounted so data survives `down`. Bring up with:
+#
+#   docker compose up -d
+#   docker compose logs -f db   # tail until "database system is ready"
+#
+# Connect:
+#   psql postgres://feynmap:feynmap@localhost:5432/feynmap
+#
+# Schema bootstrap (CREATE EXTENSION vector) happens via the init script
+# in docker/initdb/. Drizzle migrations live under backend/src/db/migrations/.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: feynmap-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: feynmap
+      POSTGRES_PASSWORD: feynmap
+      POSTGRES_DB: feynmap
+    ports:
+      - "5432:5432"
+    volumes:
+      - feynmap_db_data:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U feynmap -d feynmap"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  feynmap_db_data:

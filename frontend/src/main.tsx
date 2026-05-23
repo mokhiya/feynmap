@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { LangContext, type Lang } from './i18n';
+import { AuthProvider } from './auth';
 
 const LS_LANG = 'feynmap.lang.v1';
 
@@ -26,7 +27,9 @@ function Root() {
   }, [lang]);
   return (
     <LangContext.Provider value={{ lang, setLang }}>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </LangContext.Provider>
   );
 }

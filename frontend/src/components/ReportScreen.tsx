@@ -6,7 +6,7 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
 } from 'recharts';
-import type { Assessment } from '../types';
+import type { Assessment, Competency, SessionMode, SourceRef } from '../types';
 import { useT } from '../i18n';
 import LangSwitcher from './LangSwitcher';
 
@@ -14,29 +14,55 @@ interface Props {
   topic: string;
   assessment: Assessment | null;
   onRestart: () => void;
+  mode?: SessionMode;
+  onConvert?: () => void; // practice → assessment
+  onAppeal?: () => void; // learner appeal (assessment mode only)
 }
 
-export default function ReportScreen({ topic, assessment, onRestart }: Props) {
+export default function ReportScreen({
+  topic,
+  assessment,
+  onRestart,
+  mode,
+  onConvert,
+  onAppeal,
+}: Props) {
   const t = useT();
-  const gaps = (assessment?.competencies ?? []).filter((c) => c.gap);
-  const strong = (assessment?.competencies ?? [])
-    .filter((c) => c.score >= 70)
-    .sort((a, b) => b.score - a.score);
-  const data = (assessment?.competencies ?? []).map((c) => ({
-    subject: c.name,
-    score: c.score,
-  }));
+  const comps = assessment?.competencies ?? [];
+  const gaps = comps.filter((c) => c.gap);
+  const strong = comps.filter((c) => c.score >= 70).sort((a, b) => b.score - a.score);
+  const data = comps.map((c) => ({ subject: c.name, score: c.score }));
 
+  // Prefer assessor-supplied recommendations; fall back to derived gap-name list.
   const recs =
-    gaps.length === 0
-      ? [t.recAllGood]
-      : gaps.slice(0, 5).map((g) => t.recGap(g.name));
+    (assessment?.recommendations && assessment.recommendations.length > 0
+      ? assessment.recommendations
+      : gaps.length === 0
+        ? [t.recAllGood]
+        : gaps.slice(0, 5).map((g) => t.recGap(g.name)));
+
+  const growth = assessment?.growth_zones ?? [];
+  const strengthsList = assessment?.strengths ?? [];
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <div className="text-xs uppercase tracking-wider text-slate-500">{t.reportTitle}</div>
+          <div className="text-xs uppercase tracking-wider text-slate-500 flex items-center gap-2">
+            <span>{t.reportTitle}</span>
+            {mode && (
+              <span
+                className={
+                  'px-1.5 py-0.5 rounded text-[10px] border ' +
+                  (mode === 'assessment'
+                    ? 'bg-amber-50 text-amber-700 border-amber-100'
+                    : 'bg-slate-50 text-slate-600 border-slate-200')
+                }
+              >
+                {mode}
+              </span>
+            )}
+          </div>
           <h1 className="text-2xl font-bold text-ink">{topic}</h1>
         </div>
         <div className="flex items-center gap-3">
@@ -79,36 +105,53 @@ export default function ReportScreen({ topic, assessment, onRestart }: Props) {
         </div>
 
         <div className="space-y-4">
-          <Section title={t.gaps}>
-            {gaps.length === 0 ? (
+          <Section title={growth.length ? 'Growth zones' : t.gaps}>
+            {gaps.length === 0 && growth.length === 0 ? (
               <p className="text-sm text-slate-500">{t.noGaps}</p>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {gaps.map((c) => (
-                  <li key={c.name} className="text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{c.name}</span>
-                      <span className="text-rose-600 font-mono text-xs">{c.score}/100</span>
-                    </div>
-                    {c.evidence && <div className="text-slate-500 text-xs mt-0.5">{c.evidence}</div>}
-                  </li>
+                  <CompetencyDetail key={c.name} c={c} />
                 ))}
+                {growth.length > 0 && (
+                  <li className="pt-1 border-t border-slate-100">
+                    <div className="text-[11px] uppercase tracking-wide text-slate-400 mb-1">
+                      Assessor notes
+                    </div>
+                    <ul className="list-disc list-inside text-sm text-slate-700 space-y-0.5">
+                      {growth.map((g, i) => (
+                        <li key={i}>{g}</li>
+                      ))}
+                    </ul>
+                  </li>
+                )}
               </ul>
             )}
           </Section>
 
           <Section title={t.strengths}>
-            {strong.length === 0 ? (
+            {strong.length === 0 && strengthsList.length === 0 ? (
               <p className="text-sm text-slate-500">—</p>
             ) : (
-              <ul className="space-y-1.5">
-                {strong.map((c) => (
-                  <li key={c.name} className="text-sm flex items-center justify-between">
-                    <span>{c.name}</span>
-                    <span className="text-emerald-600 font-mono text-xs">{c.score}/100</span>
-                  </li>
-                ))}
-              </ul>
+              <>
+                {strong.length > 0 && (
+                  <ul className="space-y-1.5">
+                    {strong.map((c) => (
+                      <li key={c.name} className="text-sm flex items-center justify-between">
+                        <span>{c.name}</span>
+                        <span className="text-emerald-600 font-mono text-xs">{c.score}/100</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {strengthsList.length > 0 && (
+                  <ul className="list-disc list-inside text-sm text-slate-700 space-y-0.5 mt-2">
+                    {strengthsList.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                )}
+              </>
             )}
           </Section>
 
@@ -119,9 +162,74 @@ export default function ReportScreen({ topic, assessment, onRestart }: Props) {
               ))}
             </ul>
           </Section>
+
+          {(onConvert || onAppeal) && (
+            <Section title="Actions">
+              <div className="flex flex-col gap-2">
+                {onConvert && (
+                  <button
+                    onClick={onConvert}
+                    className="text-sm bg-amber-500 hover:bg-amber-600 text-white rounded-lg py-2 px-3"
+                  >
+                    Convert to Assessment (send for review)
+                  </button>
+                )}
+                {onAppeal && (
+                  <button
+                    onClick={onAppeal}
+                    className="text-sm border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg py-2 px-3"
+                  >
+                    Disagree? Appeal this score
+                  </button>
+                )}
+                <p className="text-[11px] text-slate-400 leading-snug">
+                  Practice sessions stay private. Assessment sessions are
+                  locked pending Assessor review and may be appealed.
+                </p>
+              </div>
+            </Section>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+function CompetencyDetail({ c }: { c: Competency }) {
+  return (
+    <li className="text-sm border border-rose-100 bg-rose-50/40 rounded-lg p-2">
+      <div className="flex items-center justify-between">
+        <span className="font-medium">
+          {c.name}
+          {c.overridden && (
+            <span className="ml-1 text-[10px] uppercase text-amber-700 bg-amber-100 px-1 rounded">
+              overridden
+            </span>
+          )}
+        </span>
+        <span className="text-rose-600 font-mono text-xs">{c.score}/100</span>
+      </div>
+      {c.criterion && (
+        <div className="text-[11px] text-slate-500 mt-1">
+          <span className="text-slate-400">criterion:</span> {c.criterion}
+        </div>
+      )}
+      {c.evidence && (
+        <div className="text-slate-600 text-xs mt-0.5">{c.evidence}</div>
+      )}
+      {c.source_refs && c.source_refs.length > 0 && (
+        <div className="text-[10px] text-slate-500 mt-1">
+          <span className="text-slate-400">refs: </span>
+          {c.source_refs.map((r: SourceRef, i: number) => (
+            <span key={i} className="mr-1">
+              {r.documentName}
+              {r.page ? `, p.${r.page}` : ''}
+              {i < (c.source_refs!.length - 1) ? ' · ' : ''}
+            </span>
+          ))}
+        </div>
+      )}
+    </li>
   );
 }
 

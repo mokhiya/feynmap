@@ -82,13 +82,17 @@ curl http://localhost:8787/health                 # {"ok":true}
 - [x] `docs/architecture.drawio` — orthogonal, no edge crossings
 - [x] Pushed to `github.com/mokhiya/feynmap`
 
-### Phase 1 — DB + Auth + RBAC + Admin panel (next)
+### Phase 1 — DB + Auth + RBAC + Admin panel (in progress)
 **Goal:** Foundation that everything else stands on. No KB or RAG yet.
-- [ ] Postgres 16 + pgvector docker-compose
-- [ ] Drizzle schema for: Organization, User, Role, Permission, AuditLog
+**DB path:** local brew postgres@17 + pgvector (hackathon demo runs on the
+laptop, no Docker required). `docker-compose.yml` ships as an optional
+fallback only — see README.
+- [x] Postgres 17 + pgvector via brew (docker-compose retained as fallback)
+- [x] Drizzle schema for: Organization, User, Role, Permission, RolePermission, UserRole, MentorBinding, AuditLog
+- [x] Initial migration generated + applied to local pg17
+- [x] Seed: 16 permissions + 6 roles + 47-grant matrix + optional dev admin (verified idempotent)
 - [ ] JWT login (`/auth/login`, `/auth/me`, `/auth/logout`), bcrypt password hash
 - [ ] RBAC middleware: permission + scope check (own/team/org)
-- [ ] Seed 6 roles with the 15 permissions from the matrix (see brief §3)
 - [ ] Admin panel UI: user CRUD, role assignment, mentor binding, block/unblock, password reset
 - [ ] CSV/XLSX user import (`POST /users/import`)
 - [ ] All admin actions logged to `AuditLog`
