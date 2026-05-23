@@ -4,8 +4,11 @@
 
 import { useState } from 'react';
 import { useAuth } from '../auth';
+import LangSwitcher from './LangSwitcher';
 
 interface Props {
+  /** Optional bail-out — set when an anonymous mode exists. Phase 1 has
+      no anonymous mode so callers omit this and the back button is hidden. */
   onCancel?: () => void;
 }
 
@@ -35,9 +38,14 @@ export default function LoginScreen({ onCancel }: Props) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50">
       <div className="max-w-sm w-full bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
-        <div className="text-xs uppercase tracking-wider text-accent font-semibold">FeynMap</div>
+        <div className="flex items-center justify-between">
+          <div className="text-xs uppercase tracking-wider text-accent font-semibold">FeynMap</div>
+          <LangSwitcher compact />
+        </div>
         <h1 className="text-2xl font-bold mt-1">Sign in</h1>
-        <p className="text-slate-500 text-sm mt-1">Admin / staff access</p>
+        <p className="text-slate-500 text-sm mt-1">
+          Sign in to start a learning session
+        </p>
 
         <label className="block text-xs text-slate-500 mt-5 mb-1">Email</label>
         <input

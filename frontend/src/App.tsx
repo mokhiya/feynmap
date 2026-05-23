@@ -24,10 +24,11 @@ interface Persisted {
 export default function App() {
   const t = useT();
   const { lang } = useLang();
-  const { user, loading: authLoading } = useAuth();
-  // Top-level app mode. 'learn' is the anonymous base MVP (Phase 0).
-  // 'login' / 'admin' are gated by JWT.
-  const [appMode, setAppMode] = useState<'learn' | 'login' | 'admin'>('learn');
+  const { user, loading: authLoading, logout, hasPerm } = useAuth();
+  // Top-level app mode. Auth is now MANDATORY — unauthenticated users
+  // are walled off at the LoginScreen below. 'learn' is the post-login
+  // default; 'admin' opens the admin panel.
+  const [appMode, setAppMode] = useState<'learn' | 'admin'>('learn');
   const [view, setView] = useState<View>('setup');
   const [topic, setTopic] = useState('');
   const [topicDraft, setTopicDraft] = useState('');
@@ -134,6 +135,20 @@ export default function App() {
     setView('report');
   };
 
+  // Sign out wipes the in-progress learn session too — so the next
+  // user landing on this device starts at a clean setup screen.
+  const signOut = async () => {
+    setView('setup');
+    setTopic('');
+    setTopicDraft('');
+    setMessages([]);
+    setAssessment(null);
+    setError(null);
+    setAppMode('learn');
+    localStorage.removeItem(LS_KEY);
+    await logout();
+  };
+
   const reset = () => {
     setView('setup');
     setTopic('');
@@ -144,31 +159,24 @@ export default function App() {
     localStorage.removeItem(LS_KEY);
   };
 
-  // ----- top-level mode routing -----
-  // After a successful login the LoginScreen disappears and we land
-  // in admin mode automatically.
-  useEffect(() => {
-    if (appMode === 'login' && user) setAppMode('admin');
-  }, [appMode, user]);
-
-  if (appMode === 'login' && !user) {
-    return <LoginScreen onCancel={() => setAppMode('learn')} />;
+  // ----- top-level routing -----
+  // Auth gate: nothing renders until we know whether the user is
+  // logged in. Hard requirement, not optional — no anonymous learn mode.
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-500 text-sm">
+        Loading session…
+      </div>
+    );
+  }
+  if (!user) {
+    return <LoginScreen />;
   }
   if (appMode === 'admin') {
-    if (authLoading) {
-      return (
-        <div className="min-h-screen flex items-center justify-center text-slate-500 text-sm">
-          Loading session…
-        </div>
-      );
-    }
-    if (!user) {
-      return <LoginScreen onCancel={() => setAppMode('learn')} />;
-    }
     return <AdminPanel onExit={() => setAppMode('learn')} />;
   }
 
-  // ----- learn view (anonymous base MVP) -----
+  // ----- learn view (authenticated) -----
   if (view === 'report') {
     return <ReportScreen topic={topic} assessment={assessment} onRestart={reset} />;
   }
@@ -180,24 +188,25 @@ export default function App() {
           <div className="flex items-center justify-between">
             <div className="text-xs uppercase tracking-wider text-accent font-semibold">FeynMap</div>
             <div className="flex items-center gap-2">
-              {user ? (
+              {hasPerm('user.manage', 'org') && (
                 <button
                   onClick={() => setAppMode('admin')}
                   className="text-xs text-accent hover:underline"
                 >
-                  Admin ({user.email}) →
-                </button>
-              ) : (
-                <button
-                  onClick={() => setAppMode('login')}
-                  className="text-xs text-slate-500 hover:text-accent"
-                >
-                  Sign in
+                  Admin →
                 </button>
               )}
+              <button
+                onClick={signOut}
+                className="text-xs text-slate-500 hover:text-rose-600"
+                title={user.email}
+              >
+                Sign out
+              </button>
               <LangSwitcher compact />
             </div>
           </div>
+          <div className="text-[11px] text-slate-400 mt-1">{user.email}</div>
           <h1 className="text-2xl font-bold mt-1">{t.appTitle}</h1>
           <p className="text-slate-600 text-sm mt-2 leading-relaxed">{t.appTagline}</p>
 
@@ -247,21 +256,21 @@ export default function App() {
         </div>
         <div className="flex items-center gap-3">
           {error && <div className="text-xs text-rose-600 max-w-md truncate" title={error}>{error}</div>}
-          {user ? (
+          <span className="text-xs text-slate-400 hidden md:inline">{user.email}</span>
+          {hasPerm('user.manage', 'org') && (
             <button
               onClick={() => setAppMode('admin')}
               className="text-xs text-accent hover:underline"
             >
               Admin →
             </button>
-          ) : (
-            <button
-              onClick={() => setAppMode('login')}
-              className="text-xs text-slate-500 hover:text-accent"
-            >
-              Sign in
-            </button>
           )}
+          <button
+            onClick={signOut}
+            className="text-xs text-slate-500 hover:text-rose-600"
+          >
+            Sign out
+          </button>
           <LangSwitcher compact />
         </div>
       </header>
