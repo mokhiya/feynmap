@@ -1,18 +1,31 @@
-import 'dotenv/config';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import dotenv from 'dotenv';
+
+// Resolve .env relative to THIS file, not process.cwd(). And override
+// any inherited env from the parent process — Claude Desktop / Claude
+// Code injects `ANTHROPIC_API_KEY=` (empty string) into spawned shells,
+// which would otherwise silently mask the real key from .env.
+dotenv.config({
+  path: path.join(path.dirname(fileURLToPath(import.meta.url)), '.env'),
+  override: true,
+});
+
 import express from 'express';
 import cors from 'cors';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLM } from './src/providers/index.js';
 
 const PORT = process.env.PORT || 8787;
-const STUDENT_MODEL = 'claude-sonnet-4-6';
-const ASSESSOR_MODEL = 'claude-haiku-4-5-20251001';
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.error('Missing ANTHROPIC_API_KEY in backend/.env');
-  process.exit(1);
-}
+// Model selection lives inside the provider — see
+// backend/src/providers/llm/anthropic.js. Routes only hint a `tier`
+// ('student' | 'assessor') and the provider resolves to a model.
+// This vshivaet Roadmap M1.1: business logic stays provider-agnostic.
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// LLM is built lazily inside route handlers via getLLM() — it memoizes
+// internally, so the cost is one function call per request. Lazy init
+// means unit tests can import this file without an API key.
+
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
@@ -131,20 +144,13 @@ app.post('/chat', async (req, res) => {
       TOPIC_LINE[L] +
       hint;
 
-    const resp = await client.messages.create({
-      model: STUDENT_MODEL,
-      max_tokens: 400,
-      system: [
-        { type: 'text', text: systemText, cache_control: { type: 'ephemeral' } },
-      ],
+    const { text } = await getLLM().complete({
+      system: systemText,
       messages,
+      tier: 'student',
+      maxTokens: 400,
+      cache: { ephemeral: true },
     });
-
-    const text = resp.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('')
-      .trim();
 
     res.json({ question: text });
   } catch (err) {
@@ -195,21 +201,18 @@ app.post('/assess', async (req, res) => {
 
     const systemText = ASSESSOR_SYSTEM_BASE + '\n\n' + LANG_DIRECTIVE[L].assessor;
 
-    const resp = await client.messages.create({
-      model: ASSESSOR_MODEL,
-      max_tokens: 1500,
-      system: [
-        { type: 'text', text: systemText, cache_control: { type: 'ephemeral' } },
-      ],
+    const { text: raw } = await getLLM().complete({
+      system: systemText,
       messages: [
         {
           role: 'user',
           content: TAIL[L](topic, transcript) + prevHint,
         },
       ],
+      tier: 'assessor',
+      maxTokens: 1500,
+      cache: { ephemeral: true },
     });
-
-    const raw = resp.content.filter(b => b.type === 'text').map(b => b.text).join('');
     let parsed;
     try {
       parsed = JSON.parse(stripJson(raw));
