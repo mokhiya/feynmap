@@ -1,0 +1,20 @@
+node_modules/
+.env
+.env.local
+dist/
+.DS_Store
+*.log
+.vite/
+
+# Python skeleton
+.venv/
+__pycache__/
+*.pyc
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Claude config (local only)
+.claude/
