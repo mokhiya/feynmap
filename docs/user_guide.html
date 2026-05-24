@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FeynMap — Руководство пользователя</title>
+<style>
+  :root{
+    --navy:#06038D; --navy-2:#241F9E; --orange:#F75128; --ink:#22243A;
+    --muted:#5b6072; --line:#e6e8f0; --bg:#f6f7fb; --card:#fff;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.6;font-size:16px}
+  a{color:var(--navy);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{background:#eef0f7;padding:1px 6px;border-radius:6px;font-size:.92em}
+  /* layout */
+  .wrap{display:grid;grid-template-columns:300px 1fr;max-width:1280px;margin:0 auto}
+  /* header */
+  header{grid-column:1/-1;background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;padding:34px 40px}
+  header .logo{display:flex;align-items:center;gap:14px}
+  header .mark{width:42px;height:42px;border:3px solid #8aa0ff;border-radius:10px;position:relative;flex:none}
+  header .mark::after{content:"";position:absolute;right:-7px;top:-4px;width:6px;height:34px;background:var(--orange);
+    border-radius:3px;transform:rotate(20deg)}
+  header h1{margin:0;font-size:30px;letter-spacing:.3px}
+  header p{margin:6px 0 0;opacity:.85;font-size:15px}
+  header .badge{display:inline-block;margin-top:14px;background:rgba(255,255,255,.14);
+    padding:6px 14px;border-radius:999px;font-size:13px}
+  /* TOC */
+  nav.toc{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;
+    padding:24px 18px 60px;border-right:1px solid var(--line);background:var(--card)}
+  nav.toc .t{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:18px 8px 6px}
+  nav.toc a{display:block;padding:6px 10px;border-radius:8px;color:var(--ink);font-size:14.5px}
+  nav.toc a:hover{background:#f0f2fa;text-decoration:none}
+  nav.toc ol{list-style:none;margin:0;padding:0;counter-reset:s}
+  nav.toc ol>li>a::before{counter-increment:s;content:counter(s) ". ";color:var(--orange);font-weight:700}
+  /* content */
+  main{padding:34px 48px 90px;min-width:0}
+  section{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px 28px;margin:0 0 22px;scroll-margin-top:18px}
+  section h2{margin:0 0 4px;font-size:23px;color:var(--navy)}
+  section h2 .n{color:var(--orange)}
+  section h3{margin:22px 0 6px;font-size:17px}
+  .lead{color:var(--muted);margin-top:2px}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14.5px}
+  th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+  th{background:#f3f4fb;color:var(--navy)}
+  .pill{display:inline-block;background:#eef0fb;color:var(--navy);border-radius:999px;padding:2px 10px;font-size:12.5px;font-weight:600;margin:0 4px 4px 0}
+  .pill.o{background:#fde7df;color:#b8431f}
+  .step{display:flex;gap:14px;margin:12px 0}
+  .step .num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+  .note{border-left:4px solid var(--orange);background:#fff6f2;padding:12px 16px;border-radius:0 10px 10px 0;margin:14px 0}
+  .tip{border-left:4px solid var(--navy);background:#f1f2fc;padding:12px 16px;border-radius:0 10px 10px 0;margin:14px 0}
+  ul.clean{margin:8px 0;padding-left:22px}
+  ul.clean li{margin:4px 0}
+  footer{grid-column:1/-1;padding:24px 48px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);text-align:center}
+  @media(max-width:880px){
+    .wrap{grid-template-columns:1fr}
+    nav.toc{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line)}
+    main{padding:24px 20px 60px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">
+      <div class="mark"></div>
+      <div>
+        <h1>FeynMap — руководство пользователя</h1>
+        <p>Учишься, объясняя. Живая карта компетенций — в реальном времени.</p>
+      </div>
+    </div>
+    <span class="badge">edTech · HRTech &nbsp;•&nbsp; RU / EN / UZ</span>
+  </header>
+
+  <nav class="toc" aria-label="Оглавление">
+    <div class="t">Оглавление</div>
+    <ol>
+      <li><a href="#intro">Что такое FeynMap</a></li>
+      <li><a href="#roles">Роли в системе</a></li>
+      <li><a href="#login">Вход и язык интерфейса</a></li>
+      <li><a href="#session">Прохождение сессии</a></li>
+      <li><a href="#report">Отчёт и зоны роста</a></li>
+      <li><a href="#safety">Психологическая безопасность</a></li>
+      <li><a href="#mentor">Наставнику</a></li>
+      <li><a href="#assessor">Ассессору: ревью и апелляции</a></li>
+      <li><a href="#hr">HR: назначения и аналитика</a></li>
+      <li><a href="#admin">Администратору</a></li>
+      <li><a href="#kb">База знаний и оценка по эталону</a></li>
+      <li><a href="#faq">Частые вопросы</a></li>
+      <li><a href="#glossary">Глоссарий</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="intro">
+      <h2><span class="n">1.</span> Что такое FeynMap</h2>
+      <p class="lead">Тренажёр «учусь, объясняя» с живой картой компетенций. По методу Фейнмана: по-настоящему понял тот, кто может объяснить просто.</p>
+      <p>Вы объясняете тему двум ИИ-ролям, которые работают одновременно:</p>
+      <table>
+        <tr><th>Роль ИИ</th><th>Что делает</th></tr>
+        <tr><td><b>Студент</b></td><td>Наивный и любопытный. Задаёт по одному короткому вопросу, цепляется за неясности, просит примеры. Следующий вопрос адаптивно бьёт в вашу слабую зону.</td></tr>
+        <tr><td><b>Ассессор</b></td><td>Невидим в диалоге. Оценивает ваши компетенции, строит радар, формирует отчёт: сильные стороны, зоны роста, рекомендации.</td></tr>
+      </table>
+      <div class="tip">Оценка ставится <b>относительно эталона</b> — материалов базы знаний, загруженных вашей организацией. Поэтому ответы проверяются не «на память», а на реальное понимание.</div>
+    </section>
+
+    <section id="roles">
+      <h2><span class="n">2.</span> Роли в системе</h2>
+      <p class="lead">Что вы видите и можете — зависит от роли. Права проверяются на сервере.</p>
+      <table>
+        <tr><th>Роль</th><th>Возможности</th></tr>
+        <tr><td><b>Обучающийся (свободный)</b></td><td>Сам выбирает тему из каталога, проходит сессии, видит свои результаты.</td></tr>
+        <tr><td><b>Обучающийся (назначаемый)</b></td><td>Проходит назначенные темы/уроки, видит свои результаты.</td></tr>
+        <tr><td><b>Наставник</b></td><td>Назначает и смотрит результаты <i>своих</i> обучающихся.</td></tr>
+        <tr><td><b>Ассессор</b></td><td>Владеет компетенциями, проверяет и при необходимости корректирует авто-оценки, разрешает апелляции.</td></tr>
+        <tr><td><b>HR</b></td><td>Назначения и аналитика по всей организации, экспорт отчётов.</td></tr>
+        <tr><td><b>Администратор</b></td><td>Пользователи и роли, база знаний, темы/уроки, настройки организации, аудит.</td></tr>
+      </table>
+    </section>
+
+    <section id="login">
+      <h2><span class="n">3.</span> Вход и язык интерфейса</h2>
+      <div class="step"><div class="num">1</div><div>Откройте адрес FeynMap, выданный вашей организацией.</div></div>
+      <div class="step"><div class="num">2</div><div>Введите <b>e-mail</b> и <b>пароль</b> (учётную запись создаёт администратор). После входа вы попадёте на свой экран по роли.</div></div>
+      <div class="step"><div class="num">3</div><div>Переключатель языка — <span class="pill">RU</span><span class="pill">EN</span><span class="pill">UZ-Latn</span> — доступен на любом экране. Интерфейс, вопросы Студента и итоговый отчёт идут на выбранном языке.</div></div>
+      <div class="note">Если после нескольких неверных попыток вход не удаётся или учётка заблокирована — обратитесь к администратору. Все входы фиксируются в журнале аудита.</div>
+    </section>
+
+    <section id="session">
+      <h2><span class="n">4.</span> Прохождение сессии</h2>
+      <h3>Шаг 1. Выбор темы и режима</h3>
+      <ul class="clean">
+        <li><b>Тема</b> — из каталога (свободный режим) или из назначенных вам (назначаемый режим).</li>
+        <li><b>Режим «Практика»</b> — приватный, без последствий: ошибаться можно, результаты по умолчанию не уходят в HR-аналитику. Рекомендуется для тренировки.</li>
+        <li><b>Режим «Ассессмент»</b> — запускается только по явному согласию/назначению; результат идёт на оценку с человеческим ревью.</li>
+      </ul>
+      <h3>Шаг 2. Объясняйте Студенту</h3>
+      <ul class="clean">
+        <li>Пишите короткими сообщениями, как будто объясняете любознательному новичку.</li>
+        <li>Студент задаёт по одному уточняющему вопросу — отвечайте на него и углубляйте объяснение.</li>
+        <li>Приводите примеры, аналогии, числа — именно они показывают понимание.</li>
+      </ul>
+      <h3>Шаг 3. Следите за живым радаром</h3>
+      <p>Справа в реальном времени собирается <b>карта компетенций</b>. Слабая ось подсвечивается — и следующий вопрос Студента полетит точно в неё (<code>next_focus</code>), чтобы помочь вам её раскрыть.</p>
+      <h3>Шаг 4. Завершите</h3>
+      <p>Через несколько ходов нажмите <b>«Завершить»</b> — система соберёт финальный отчёт.</p>
+      <div class="tip">Объясняйте «как есть». Цель — не угадать ответ, а показать, что вы реально понимаете тему. Идеальных формулировок не требуется.</div>
+    </section>
+
+    <section id="report">
+      <h2><span class="n">5.</span> Отчёт и зоны роста</h2>
+      <p class="lead">Финальный экран — честная карта без осуждающего тона.</p>
+      <ul class="clean">
+        <li><b>Радар компетенций</b> и общий уровень.</li>
+        <li><b>Сильные стороны</b> — что вы продемонстрировали уверенно.</li>
+        <li><b>Зоны роста</b> — что стоит подтянуть (вместо слова «провалы»).</li>
+        <li><b>Рекомендации</b> — конкретные следующие шаги.</li>
+        <li><b>Источники</b> — у каждого балла есть критерий и ссылка на фрагмент эталона: видно, «за что» он поставлен.</li>
+      </ul>
+      <div class="tip">По выявленным зонам роста можно перепройти тему — повтор не штрафуется, цель — мастерство.</div>
+    </section>
+
+    <section id="safety">
+      <h2><span class="n">6.</span> Психологическая безопасность</h2>
+      <ul class="clean">
+        <li><b>Практика приватна.</b> Тренируйтесь спокойно — результаты практики не попадают в HR-аналитику без явного перевода в ассессмент.</li>
+        <li><b>Тёплый тон.</b> Если система замечает признаки фрустрации, Студент смягчает подачу, предлагает паузу или подсказку — без штрафа.</li>
+        <li><b>Язык роста.</b> Пробелы названы «зонами роста»; акцент — на динамике, а не на ярлыках.</li>
+        <li><b>Выход в любой момент</b> не ухудшает результат.</li>
+      </ul>
+    </section>
+
+    <section id="mentor">
+      <h2><span class="n">7.</span> Наставнику</h2>
+      <ul class="clean">
+        <li><b>Назначение.</b> Выдавайте темы/уроки <i>своим</i> обучающимся с дедлайном.</li>
+        <li><b>Команда.</b> Видите агрегированные результаты только по своим подопечным (область <code>team</code>).</li>
+        <li><b>Отчёты</b> по команде можно экспортировать.</li>
+      </ul>
+    </section>
+
+    <section id="assessor">
+      <h2><span class="n">8.</span> Ассессору: ревью и апелляции</h2>
+      <ul class="clean">
+        <li><b>Компетенции.</b> Вы определяете и редактируете набор компетенций по темам.</li>
+        <li><b>Ревью.</b> Авто-оценка Ассессора имеет статус <code>auto → на ревью → подтверждена | переопределена</code>.</li>
+        <li><b>Override.</b> Корректировка балла требует <b>обязательного комментария</b> и фиксируется в аудите (прозрачность решений).</li>
+        <li><b>Апелляции.</b> Обучающийся может оспорить результат — вы рассматриваете и выносите решение.</li>
+      </ul>
+      <div class="note">Оценка с последствиями не финализируется без подтверждения человеком (human-in-the-loop).</div>
+    </section>
+
+    <section id="hr">
+      <h2><span class="n">9.</span> HR: назначения и аналитика</h2>
+      <ul class="clean">
+        <li><b>Назначения</b> тем/уроков сотрудникам по всей организации с дедлайнами.</li>
+        <li><b>Аналитика</b> — карты компетенций по человеку, команде и организации; динамика во времени.</li>
+        <li><b>Экспорт</b> отчётов для дальнейшей работы.</li>
+      </ul>
+      <div class="tip">HR управляет людьми и назначениями, но <b>не</b> раздаёт роли — назначение ролей закреплено за администратором.</div>
+    </section>
+
+    <section id="admin">
+      <h2><span class="n">10.</span> Администратору</h2>
+      <h3>Пользователи и роли</h3>
+      <ul class="clean">
+        <li>Создание/редактирование пользователей, блокировка/разблокировка, сброс пароля.</li>
+        <li>Назначение ролей (одна или несколько на пользователя) и привязка наставник↔обучающийся.</li>
+        <li>Все действия пишутся в <b>журнал аудита</b>.</li>
+      </ul>
+      <h3>База знаний</h3>
+      <ul class="clean">
+        <li>Загрузка документов: <span class="pill">PDF</span><span class="pill">DOCX</span><span class="pill">MD</span><span class="pill">TXT</span> (до 25 МБ).</li>
+        <li>Статус обработки виден: <code>загружен → разбор → проиндексирован | ошибка</code>.</li>
+        <li>Переиндексация и удаление документов.</li>
+      </ul>
+      <h3>Темы, уроки, компетенции</h3>
+      <ul class="clean">
+        <li>Конструируйте темы из материалов базы знаний; связывайте темы с документами.</li>
+        <li>Описывайте компетенции (с весами) — по ним строится радар.</li>
+      </ul>
+    </section>
+
+    <section id="kb">
+      <h2><span class="n">11.</span> База знаний и оценка по эталону</h2>
+      <p class="lead">Почему загруженные материалы важны.</p>
+      <p>При загрузке документ разбивается на фрагменты и индексируется (векторный поиск). Во время сессии система находит <b>самые релевантные фрагменты</b> и подкладывает их Студенту и Ассессору как <b>эталон</b>. Благодаря этому:</p>
+      <ul class="clean">
+        <li>Студент задаёт вопросы по существу темы.</li>
+        <li>Ассессор оценивает ответ <b>относительно источника</b>, а не «в вакууме», и ссылается на конкретные фрагменты.</li>
+      </ul>
+      <div class="tip">Чем качественнее и полнее база знаний по теме, тем точнее карта компетенций.</div>
+    </section>
+
+    <section id="faq">
+      <h2><span class="n">12.</span> Частые вопросы</h2>
+      <h3>Нужно ли отвечать «правильными» терминами?</h3>
+      <p>Нет. Важнее объяснить смысл простыми словами, с примерами. Точные термины — приятный бонус.</p>
+      <h3>Я ошибся — это испортит результат?</h3>
+      <p>В режиме «Практика» — нет, это тренировка. Ошибки — часть обучения.</p>
+      <h3>Не согласен с оценкой.</h3>
+      <p>Подайте апелляцию из экрана результата — её рассмотрит Ассессор.</p>
+      <h3>На каком языке проходить?</h3>
+      <p>На любом из RU / EN / UZ-Latn — переключатель доступен всегда.</p>
+      <h3>Кто видит мои результаты?</h3>
+      <p>Практика приватна. Ассессмент видят Ассессор/HR/наставник в рамках их роли. На каждом экране видно, кто увидит результат.</p>
+    </section>
+
+    <section id="glossary">
+      <h2><span class="n">13.</span> Глоссарий</h2>
+      <table>
+        <tr><th>Термин</th><th>Значение</th></tr>
+        <tr><td>Студент</td><td>ИИ-роль, которой вы объясняете тему; задаёт наивные вопросы.</td></tr>
+        <tr><td>Ассессор</td><td>Невидимая ИИ-роль, оценивающая компетенции и строящая радар.</td></tr>
+        <tr><td>Радар компетенций</td><td>Диаграмма уровня владения по осям-компетенциям.</td></tr>
+        <tr><td>next_focus</td><td>Слабая зона, в которую целится следующий вопрос Студента.</td></tr>
+        <tr><td>Эталон (RAG)</td><td>Релевантные фрагменты базы знаний, по которым оценивается ответ.</td></tr>
+        <tr><td>Практика / Ассессмент</td><td>Приватный тренировочный режим / режим с оценкой и ревью.</td></tr>
+        <tr><td>Зоны роста</td><td>Компетенции, которые стоит подтянуть.</td></tr>
+        <tr><td>Апелляция</td><td>Запрос на пересмотр результата человеком.</td></tr>
+      </table>
+    </section>
+
+  </main>
+
+  <footer>
+    FeynMap · Руководство пользователя · понял тот, кто может объяснить просто.
+  </footer>
+</div>
+</body>
+</html>

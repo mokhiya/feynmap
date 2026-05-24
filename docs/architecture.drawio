@@ -1,115 +1,312 @@
-<mxfile host="app.diagrams.net" modified="2026-05-22T00:00:00.000Z" agent="FeynMap" version="24.0.0" type="device">
-  <diagram id="feynmap-arch" name="FeynMap Architecture">
-    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="700" math="0" shadow="0">
+<mxfile host="Electron" agent="claude-code" pages="3">
+  <diagram id="feynmap-arch" name="Архитектура — поток данных">
+    <mxGraphModel dx="1400" dy="750" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1440" pageHeight="620" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-
-        <!-- Column headers -->
-        <mxCell id="h_user" value="Браузер" style="text;html=1;align=center;fontStyle=1;fontSize=13;fillColor=none;strokeColor=none;" vertex="1" parent="1">
-          <mxGeometry x="40" y="40" width="160" height="24" as="geometry" />
+        <mxCell id="fe_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eaf1fb;strokeColor=#6c8ebf;dashed=1;verticalAlign=top;fontStyle=1;fontSize=13;fontColor=#22437a;arcSize=4;" value="Frontend (React + Vite + Tailwind)" vertex="1">
+          <mxGeometry height="470" width="190" x="210" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="h_fe" value="Frontend (React + Vite)" style="text;html=1;align=center;fontStyle=1;fontSize=13;fillColor=none;strokeColor=none;" vertex="1" parent="1">
-          <mxGeometry x="260" y="40" width="200" height="24" as="geometry" />
+        <mxCell id="be_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ecf6ea;strokeColor=#82b366;dashed=1;verticalAlign=top;fontStyle=1;fontSize=13;fontColor=#2d5a1f;arcSize=4;" value="Backend (Express-прокси)" vertex="1">
+          <mxGeometry height="300" width="180" x="540" y="160" as="geometry" />
         </mxCell>
-        <mxCell id="h_be" value="Backend (Express proxy)" style="text;html=1;align=center;fontStyle=1;fontSize=13;fillColor=none;strokeColor=none;" vertex="1" parent="1">
-          <mxGeometry x="580" y="40" width="180" height="24" as="geometry" />
+        <mxCell id="abs_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;verticalAlign=top;fontStyle=1;fontSize=13;fontColor=#7f6000;arcSize=4;" value="Слой-абстракция LLM (provider-agnostic)" vertex="1">
+          <mxGeometry height="300" width="210" x="820" y="160" as="geometry" />
         </mxCell>
-        <mxCell id="h_llm" value="LLM (Claude)" style="text;html=1;align=center;fontStyle=1;fontSize=13;fillColor=none;strokeColor=none;" vertex="1" parent="1">
-          <mxGeometry x="880" y="40" width="180" height="24" as="geometry" />
+        <mxCell id="prov_bg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f1eaf6;strokeColor=#9673a6;dashed=1;verticalAlign=top;fontStyle=1;fontSize=13;fontColor=#5b3a73;arcSize=4;" value="LLM-провайдер · активен один (выбор по ENV)" vertex="1">
+          <mxGeometry height="300" width="290" x="1110" y="160" as="geometry" />
         </mxCell>
-
-        <!-- Blocks -->
-        <mxCell id="user" value="Пользователь&#10;(эксперт)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="40" y="80" width="160" height="60" as="geometry" />
+        <mxCell id="user" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;arcSize=12;" value="Пользователь&#xa;/ Браузер" vertex="1">
+          <mxGeometry height="70" width="130" x="40" y="250" as="geometry" />
         </mxCell>
-
-        <mxCell id="chat_ui" value="Чат-панель" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="260" y="80" width="200" height="60" as="geometry" />
+        <mxCell id="chat_ui" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Чат-панель" vertex="1">
+          <mxGeometry height="70" width="140" x="235" y="110" as="geometry" />
         </mxCell>
-        <mxCell id="radar_ui" value="Радар компетенций" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="260" y="240" width="200" height="60" as="geometry" />
+        <mxCell id="radar_ui" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Радар компетенций" vertex="1">
+          <mxGeometry height="70" width="140" x="235" y="250" as="geometry" />
         </mxCell>
-        <mxCell id="report_ui" value="Экран отчёта" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="260" y="400" width="200" height="60" as="geometry" />
+        <mxCell id="report_ui" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Экран отчёта" vertex="1">
+          <mxGeometry height="70" width="140" x="235" y="390" as="geometry" />
         </mxCell>
-
-        <mxCell id="ep_chat" value="POST /chat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=4;" vertex="1" parent="1">
-          <mxGeometry x="580" y="80" width="180" height="60" as="geometry" />
+        <mxCell id="ep_chat" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" value="/chat&#xa;ход диалога" vertex="1">
+          <mxGeometry height="70" width="140" x="560" y="200" as="geometry" />
         </mxCell>
-        <mxCell id="ep_assess" value="POST /assess" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=4;" vertex="1" parent="1">
-          <mxGeometry x="580" y="240" width="180" height="60" as="geometry" />
+        <mxCell id="ep_assess" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" value="/assess&#xa;оценка" vertex="1">
+          <mxGeometry height="70" width="140" x="560" y="330" as="geometry" />
         </mxCell>
-
-        <mxCell id="llm_student" value="Роль: Студент&#10;claude-sonnet-4-6" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="880" y="80" width="180" height="60" as="geometry" />
+        <mxCell id="r_student" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6b3;strokeColor=#d6b656;fontSize=12;" value="Роль: Студент&#xa;(system-prompt)" vertex="1">
+          <mxGeometry height="70" width="180" x="835" y="200" as="geometry" />
         </mxCell>
-        <mxCell id="llm_assess" value="Роль: Ассессор&#10;claude-haiku-4-5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="880" y="240" width="180" height="60" as="geometry" />
+        <mxCell id="r_assessor" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6b3;strokeColor=#d6b656;fontSize=12;" value="Роль: Ассессор&#xa;(system-prompt)" vertex="1">
+          <mxGeometry height="70" width="180" x="835" y="330" as="geometry" />
         </mxCell>
-
-        <!-- ===== Edges (orthogonal, dedicated lanes) ===== -->
-
-        <!-- A. user -> chat_ui : ввод темы -->
-        <mxCell id="e_a" value="ввод темы" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="user" target="chat_ui">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="prov_cloud" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" value="Облако&#xa;Claude · OpenAI" vertex="1">
+          <mxGeometry height="75" width="250" x="1130" y="200" as="geometry" />
         </mxCell>
-
-        <!-- B. chat_ui -> /chat : промпт (top lane) -->
-        <mxCell id="e_b" value="промпт" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="chat_ui" target="ep_chat">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="prov_local" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" value="On-prem&#xa;Qwen (vLLM) · BGE-m3" vertex="1">
+          <mxGeometry height="75" width="250" x="1130" y="335" as="geometry" />
         </mxCell>
-
-        <!-- C. /chat -> student : промпт (top lane) -->
-        <mxCell id="e_c" value="промпт" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="ep_chat" target="llm_student">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <!-- D. student -> /chat : вопрос (bottom lane, return) -->
-        <mxCell id="e_d" value="вопрос" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="llm_student" target="ep_chat">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <!-- E. /chat -> chat_ui : вопрос (bottom lane, return) -->
-        <mxCell id="e_e" value="вопрос" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="ep_chat" target="chat_ui">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <!-- F. chat_ui -> /assess : история (right corridor at x=520) -->
-        <mxCell id="e_f" value="история" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.9;exitDx=0;exitDy=0;entryX=0;entryY=0.2;entryDx=0;entryDy=0;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="chat_ui" target="ep_assess">
+        <mxCell id="e1" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#444444;fontSize=11;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="chat_ui" value="запрос">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="520" y="134" />
-              <mxPoint x="520" y="252" />
+              <mxPoint x="200" y="285" />
+              <mxPoint x="200" y="145" />
             </Array>
           </mxGeometry>
         </mxCell>
-
-        <!-- G. /assess -> assessor : история (lower top lane) -->
-        <mxCell id="e_g" value="история" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="ep_assess" target="llm_assess">
+        <mxCell id="e2" edge="1" parent="1" source="chat_ui" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#444444;fontSize=11;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="ep_chat" value="промпт">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="470" y="145" />
+              <mxPoint x="470" y="235" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="ep_chat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#444444;fontSize=11;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="r_student" value="промпт">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- H. assessor -> /assess : JSON (lower bottom lane, return) -->
-        <mxCell id="e_h" value="JSON" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="llm_assess" target="ep_assess">
+        <mxCell id="e4" edge="1" parent="1" source="r_student" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;fontSize=11;fontColor=#5b3a73;labelBackgroundColor=#ffffff;dashed=0;exitX=0.5;exitY=0;entryX=0.5;entryY=0;" target="chat_ui" value="вопрос">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="925" y="85" />
+              <mxPoint x="305" y="85" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="chat_ui" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#444444;fontSize=11;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1;exitY=1;entryX=0;entryY=0.5;" target="ep_assess" value="история диалога">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="470" y="180" />
+              <mxPoint x="470" y="365" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="ep_assess" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#444444;fontSize=11;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="r_assessor" value="промпт">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- I. /assess -> radar_ui : JSON-оценка (horizontal lower row, leftward) -->
-        <mxCell id="e_i" value="JSON-оценка" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#82b366;" edge="1" parent="1" source="ep_assess" target="radar_ui">
+        <mxCell id="e7" edge="1" parent="1" source="r_assessor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;fontSize=11;fontColor=#5b3a73;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" target="radar_ui" value="JSON-оценка">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="925" y="500" />
+              <mxPoint x="410" y="500" />
+              <mxPoint x="410" y="285" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="r_assessor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b46504;fontSize=11;fontColor=#b46504;labelBackgroundColor=#ffffff;dashed=1;exitX=0.2;exitY=0;entryX=0.2;entryY=1;" target="r_student" value="next_focus">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- J. assessor -> student : next_focus (vertical inside LLM column) -->
-        <mxCell id="e_j" value="next_focus" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b85450;dashed=1;" edge="1" parent="1" source="llm_assess" target="llm_student">
+        <mxCell id="e9" edge="1" parent="1" source="r_student" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7f6000;fontSize=11;fontColor=#7f6000;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.3;" target="prov_bg" value="LLMProvider.chat()">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1070" y="235" />
+              <mxPoint x="1070" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="r_assessor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7f6000;fontSize=11;fontColor=#7f6000;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.7;" target="prov_bg" value="chat() / embed()">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1070" y="365" />
+              <mxPoint x="1070" y="370" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="prov_cloud" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;startArrow=open;endArrow=open;strokeColor=#9673a6;fontSize=11;fontColor=#5b3a73;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="prov_local" value="по ENV">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Legend -->
-        <mxCell id="legend" value="Поток: сплошные стрелки — прямой вызов; пунктир — обратная связь next_focus, передаваемая через бэкенд в следующий /chat" style="text;html=1;align=left;fontSize=10;fillColor=#f5f5f5;strokeColor=#cccccc;rounded=1;spacing=6;" vertex="1" parent="1">
-          <mxGeometry x="40" y="500" width="1020" height="40" as="geometry" />
+        <mxCell id="legend" parent="1" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#555555;spacing=4;" value="Поток: пользователь → Frontend → /chat → Студент → вопрос. Параллельно: история → /assess → Ассессор → JSON-оценка → радар; next_focus возвращается Студенту.&#xa;Все вызовы LLM/эмбеддингов идут через provider-agnostic слой: один активный провайдер выбирается по ENV — облако (Claude / OpenAI) или on-prem (Qwen на vLLM + BGE-m3), без правок бизнес-логики.&#xa;Языки сессии: RU / UZ-Latn / EN. API-ключи — только на backend, никогда в браузере; on-prem — данные не покидают периметр." vertex="1">
+          <mxGeometry height="100" width="760" x="40" y="560" as="geometry" />
         </mxCell>
-
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="feynmap-loop" name="Адаптивный цикл одного хода">
+    <mxGraphModel dx="1100" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- ===== Заголовки участников ===== -->
+        <mxCell id="h_user" value="Пользователь" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="35" y="40" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="h_fe" value="Frontend" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="265" y="40" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="h_be" value="Backend (прокси)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="495" y="40" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="h_student" value="Студент (LLM)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="735" y="40" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="h_assessor" value="Ассессор (LLM)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="975" y="40" width="130" height="40" as="geometry" />
+        </mxCell>
+        <!-- ===== Линии жизни (пунктир вниз) ===== -->
+        <mxCell id="ll_user" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="100" y="80" as="sourcePoint" />
+            <mxPoint x="100" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll_fe" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="330" y="80" as="sourcePoint" />
+            <mxPoint x="330" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll_be" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="80" as="sourcePoint" />
+            <mxPoint x="560" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll_student" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="800" y="80" as="sourcePoint" />
+            <mxPoint x="800" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ll_assessor" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1040" y="80" as="sourcePoint" />
+            <mxPoint x="1040" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- ===== Сообщения (по возрастанию y, не пересекаются) ===== -->
+        <mxCell id="s1" value="1. объясняет тему" style="html=1;endArrow=block;rounded=0;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;align=left;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="100" y="110" as="sourcePoint" />
+            <mxPoint x="330" y="110" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2" value="2. POST /assess (тема + история)" style="html=1;endArrow=block;rounded=0;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;align=left;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="330" y="160" as="sourcePoint" />
+            <mxPoint x="560" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s3" value="3. промпт оценки" style="html=1;endArrow=block;rounded=0;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;align=left;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="210" as="sourcePoint" />
+            <mxPoint x="1040" y="210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s4" value="4. строгий JSON {competencies, next_focus, overall}" style="html=1;endArrow=open;rounded=0;dashed=1;strokeColor=#9673a6;fontColor=#5b3a73;fontSize=11;labelBackgroundColor=#ffffff;align=left;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1040" y="260" as="sourcePoint" />
+            <mxPoint x="560" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s5" value="5. оценка → радар обновляется (анимация)" style="html=1;endArrow=open;rounded=0;dashed=1;strokeColor=#6c8ebf;fontColor=#22437a;fontSize=11;labelBackgroundColor=#ffffff;align=left;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="310" as="sourcePoint" />
+            <mxPoint x="330" y="310" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s6" value="6. POST /chat (история + next_focus)" style="html=1;endArrow=block;rounded=0;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;align=left;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="330" y="370" as="sourcePoint" />
+            <mxPoint x="560" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s7" value="7. промпт + подсказка next_focus" style="html=1;endArrow=block;rounded=0;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;align=left;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="420" as="sourcePoint" />
+            <mxPoint x="800" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s8" value="8. следующий наивный вопрос" style="html=1;endArrow=open;rounded=0;dashed=1;strokeColor=#9673a6;fontColor=#5b3a73;fontSize=11;labelBackgroundColor=#ffffff;align=left;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="800" y="470" as="sourcePoint" />
+            <mxPoint x="560" y="470" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s9" value="9. вопрос" style="html=1;endArrow=open;rounded=0;dashed=1;strokeColor=#6c8ebf;fontColor=#22437a;fontSize=11;labelBackgroundColor=#ffffff;align=left;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="520" as="sourcePoint" />
+            <mxPoint x="330" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s10" value="10. показывает вопрос студента" style="html=1;endArrow=block;rounded=0;strokeColor=#333333;fontSize=11;labelBackgroundColor=#ffffff;align=left;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="330" y="570" as="sourcePoint" />
+            <mxPoint x="100" y="570" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <!-- ===== Примечание о цикле ===== -->
+        <mxCell id="note" value="Цикл повторяется на каждый ход пользователя: сначала оценка (radar + next_focus), затем адаптивный вопрос Студента в слабую зону. По кнопке «Завершить» Frontend вызывает /report и показывает финальный экран. Студент и Ассессор обращаются к LLM через единый provider-agnostic слой (облако или on-prem — по ENV)." style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#555555;spacing=4;" vertex="1" parent="1">
+          <mxGeometry x="60" y="600" width="760" height="70" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="feynmap-ux" name="Экранный UX-флоу">
+    <mxGraphModel dx="1120" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1120" pageHeight="480" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sc_topic" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontStyle=1;fontSize=13;fontColor=#7f6000;arcSize=8;spacingTop=6;" value="Экран темы&#xa;&#xa;ввод темы + примеры-чипы;&#xa;опц. «Продолжить сессию»" vertex="1">
+          <mxGeometry height="120" width="220" x="30" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="sc_chat" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;fontStyle=1;fontSize=13;fontColor=#22437a;arcSize=6;spacingTop=6;" value="Экран диалога" vertex="1">
+          <mxGeometry height="160" width="300" x="380" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="sc_chat_left" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eef4fc;strokeColor=#6c8ebf;fontSize=11;" value="Чат-панель" vertex="1">
+          <mxGeometry height="95" width="130" x="395" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="sc_chat_right" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eef4fc;strokeColor=#6c8ebf;fontSize=11;" value="Радар + список&#xa;компетенций" vertex="1">
+          <mxGeometry height="95" width="125" x="540" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="sc_report" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;verticalAlign=top;fontStyle=1;fontSize=13;fontColor=#2d5a1f;arcSize=8;spacingTop=6;" value="Экран отчёта&#xa;&#xa;итоговый радар + балл,&#xa;пробелы, рекомендации" vertex="1">
+          <mxGeometry height="120" width="240" x="820" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="ux1" edge="1" parent="1" source="sc_topic" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#444444;fontSize=11;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1;exitY=0.33;entryX=0;entryY=0.33;" target="sc_chat" value="«Начать» → /chat (пустая история)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ux2" edge="1" parent="1" source="sc_topic" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#b46504;fontSize=11;fontColor=#b46504;labelBackgroundColor=#ffffff;exitX=1;exitY=0.7;entryX=0;entryY=0.7;" target="sc_chat" value="«Продолжить сессию» (localStorage)">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ux3" edge="1" parent="1" source="sc_chat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#444444;fontSize=11;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="sc_report" value="«Завершить» → /report">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ux_loop" edge="1" parent="1" source="sc_chat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6c8ebf;fontSize=11;fontColor=#22437a;labelBackgroundColor=#ffffff;exitX=0.4;exitY=0;entryX=0.6;entryY=0;" target="sc_chat" value="каждый ход: /assess → радар, затем /chat (next_focus)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="500" y="125" />
+              <mxPoint x="560" y="125" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ux4" edge="1" parent="1" source="sc_report" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#82b366;fontSize=11;fontColor=#2d5a1f;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" target="sc_chat" value="«Продолжить объяснять»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="900" y="370" />
+              <mxPoint x="530" y="370" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ux5" edge="1" parent="1" source="sc_report" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#999999;fontSize=11;fontColor=#555555;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0.5;entryY=0;" target="sc_topic" value="«Новая тема»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="900" y="85" />
+              <mxPoint x="170" y="85" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ux6" edge="1" parent="1" source="sc_chat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#999999;fontSize=11;fontColor=#555555;labelBackgroundColor=#ffffff;exitX=0.25;exitY=1;entryX=0.5;entryY=1;" target="sc_topic" value="«Новая тема»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="455" y="410" />
+              <mxPoint x="170" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ux_note" parent="1" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#666666;spacing=4;" value="Состояние сессии (topic, history, assessment) хранится в React state и зеркалится в localStorage (ключ feynmap-session) — поэтому возможен возврат к прошлой сессии с экрана темы. Язык интерфейса (RU / UZ-Latn / EN) переключается на любом экране." vertex="1">
+          <mxGeometry height="40" width="760" x="60" y="430" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
