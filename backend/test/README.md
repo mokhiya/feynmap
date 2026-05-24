@@ -36,6 +36,15 @@ node scripts/deploy-check.mjs
 - `SMOKE_EMAIL` / `SMOKE_PASSWORD` / `SMOKE_ORG_SLUG` — включают проверку authed-пути.
 - `SMOKE_TIMEOUT_MS` — ожидание готовности `/health` (по умолч. 60000).
 
-## CI
+## Полный прогон (как при проверке деплоя)
 
-`.github/workflows/ci.yml` на каждый push в `main` / PR: поднимает `pgvector/pgvector:pg17`, `npm ci` → `db:migrate` → `db:seed` → `node --test test/` → boot сервера → `deploy-check.mjs`. Провайдеры в CI = стаб `local`, поэтому облачный ключ не нужен.
+Без внешнего CI — всё гоняется локально:
+
+```bash
+cd backend
+npm ci
+npm run db:migrate && npm run db:seed   # нужна локальная Postgres+pgvector
+node --test test/                        # unit + db-deploy
+node server.js & sleep 2                 # поднять бэкенд
+node scripts/deploy-check.mjs            # post-deploy smoke (exit-code)
+```

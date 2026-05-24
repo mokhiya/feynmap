@@ -380,7 +380,7 @@ SMOKE_EMAIL=admin@feynmap.local SMOKE_PASSWORD=FeynMap!Demo2026 \
 node scripts/deploy-check.mjs
 ```
 
-**CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) на каждый push в `main` / PR поднимает `pgvector/pgvector:pg17`, применяет миграции и seed, гоняет `node --test` и smoke. Детали — [`backend/test/README.md`](backend/test/README.md).
+Тесты прогоняются вручную (команды выше) — без внешних зависимостей, на встроенном `node:test`. Подробности и переменные окружения — [`backend/test/README.md`](backend/test/README.md).
 
 ---
 
