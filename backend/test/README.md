@@ -8,7 +8,7 @@
 cd backend
 
 # Всё (unit всегда; db/smoke — если заданы DATABASE_URL / поднят сервер)
-node --test test/
+node --test
 
 # Только unit (без БД и сети)
 node --test test/chunk.unit.test.js test/providers.unit.test.js
@@ -44,7 +44,7 @@ node scripts/deploy-check.mjs
 cd backend
 npm ci
 npm run db:migrate && npm run db:seed   # нужна локальная Postgres+pgvector
-node --test test/                        # unit + db-deploy
+node --test                        # unit + db-deploy
 node server.js & sleep 2                 # поднять бэкенд
 node scripts/deploy-check.mjs            # post-deploy smoke (exit-code)
 ```

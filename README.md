@@ -369,7 +369,7 @@ npm run db:migrate && npm run db:seed   # идемпотентно
 curl http://localhost:8787/health          # → {"ok":true}
 
 # 2. автотесты деплоя — встроенный node:test, без доп. зависимостей
-cd backend && node --test test/
+cd backend && node --test
 #    unit (чанкер, provider-фабрика) — всегда;
 #    db-deploy (расширения, таблицы, seed, pgvector) — если задан DATABASE_URL;
 #    http-smoke (/health, guard 401, login→JWT→/me) — если поднят сервер.
